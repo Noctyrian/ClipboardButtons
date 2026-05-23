@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clipboard Buttons</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="app">
+    <header class="top-bar">
+      <div class="button-group">
+        <button id="addButtonBtn">Add Button</button>
+        <button id="addCategoryBtn">Add Category</button>
+        <button id="editCategoryBtn">Edit Category</button>
+        <button id="deleteCategoryBtn">Delete Category</button>
+        <button id="backgroundColorBtn">Background Color</button>
+        <button id="exportBtn">Export Backup</button>
+        <button id="importBtn">Import Backup</button>
+        <input id="importFileInput" type="file" accept="application/json,.json" hidden />
+      </div>
+      <label class="search-label">Search:
+        <input id="searchInput" type="search" placeholder="Search labels or copied text" />
+      </label>
+    </header>
+    <div id="status" class="status"></div>
+    <nav id="tabBar" class="tab-bar" aria-label="Categories"></nav>
+    <section id="buttonGrid" class="button-grid" aria-label="Clipboard buttons"></section>
+  </main>
+
+  <dialog id="buttonDialog">
+    <form method="dialog" id="buttonForm">
+      <h2 id="buttonDialogTitle">Add Button</h2>
+      <label>Button Label<input id="buttonLabelInput" type="text" required /></label>
+      <label>Button Color<div class="color-row"><input id="buttonColorInput" type="color" /><input id="buttonColorTextInput" type="text" /></div></label>
+      <label>Button Text Color<div class="color-row"><input id="buttonTextColorInput" type="color" /><input id="buttonTextColorTextInput" type="text" /></div></label>
+      <label>Text to Copy<textarea id="buttonCopyTextInput" rows="10"></textarea></label>
+      <div class="dialog-actions"><button type="button" id="cancelButtonDialogBtn">Cancel</button><button type="submit">Save</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="categoryDialog">
+    <form method="dialog" id="categoryForm">
+      <h2 id="categoryDialogTitle">Add Category</h2>
+      <label>Category Name<input id="categoryNameInput" type="text" required /></label>
+      <label>Tab Color<div class="color-row"><input id="categoryColorInput" type="color" /><input id="categoryColorTextInput" type="text" /></div></label>
+      <label>Tab Text Color<div class="color-row"><input id="categoryTextColorInput" type="color" /><input id="categoryTextColorTextInput" type="text" /></div></label>
+      <div class="dialog-actions"><button type="button" id="cancelCategoryDialogBtn">Cancel</button><button type="submit">Save</button></div>
+    </form>
+  </dialog>
+
+  <div id="previewBox" class="preview-box" hidden></div>
+  <script src="script.js"></script>
+</body>
+</html>
