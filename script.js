@@ -17,6 +17,7 @@ let editingButton = null;
 let editingCategory = null;
 let draggedButton = null;
 let draggedCategory = null;
+let tabHoverTimer = null;
 
 const $ = id => document.getElementById(id);
 const elements = {
@@ -85,8 +86,35 @@ function renderTabs(visible){
     tab.draggable=true; tab.dataset.category=name;
     tab.addEventListener("click",()=>{ currentCategory=name; render(); });
     tab.addEventListener("dragstart",e=>{ draggedCategory=name; draggedButton=null; e.dataTransfer.effectAllowed="move"; e.dataTransfer.setData("text/plain",name); });
-    tab.addEventListener("dragover",e=>{ if(!draggedCategory && !draggedButton) return; e.preventDefault(); if(draggedButton){ currentCategory=name; render(); }});
-    tab.addEventListener("drop",e=>{ e.preventDefault(); if(draggedCategory){ moveCategory(draggedCategory,getCategoryInsertIndex(e.clientX)); draggedCategory=null; }});
+    tab.addEventListener("dragover",e=>{
+      if(!draggedCategory && !draggedButton) return;
+      e.preventDefault();
+
+      if(draggedButton && currentCategory !== name){
+        clearTimeout(tabHoverTimer);
+        tabHoverTimer = setTimeout(()=>{
+          currentCategory = name;
+          render();
+        }, 250);
+      }
+    });
+
+    tab.addEventListener("drop",e=>{
+      e.preventDefault();
+      clearTimeout(tabHoverTimer);
+
+      if(draggedCategory){
+        moveCategory(draggedCategory,getCategoryInsertIndex(e.clientX));
+        draggedCategory=null;
+        return;
+      }
+
+      if(draggedButton){
+        const targetButtons = data.categories[name]?.buttons || [];
+        moveButton(draggedButton.categoryName, draggedButton.index, name, targetButtons.length);
+        draggedButton=null;
+      }
+    });
     elements.tabBar.appendChild(tab);
   }
 }
@@ -94,7 +122,35 @@ function renderTabs(visible){
 function renderButtons(){
   elements.buttonGrid.innerHTML="";
   if(!currentCategory){ elements.buttonGrid.textContent="No matching buttons"; return; }
-  for(const {button,index} of filteredButtons(currentCategory)){
+  const visibleButtonList = filteredButtons(currentCategory);
+
+  if(visibleButtonList.length === 0){
+    const emptyDropZone = document.createElement("div");
+    emptyDropZone.className = "empty-drop-zone";
+    emptyDropZone.textContent = "Drop a button here to add it to this tab.";
+
+    emptyDropZone.addEventListener("dragover", event => {
+      if(!draggedButton) return;
+      event.preventDefault();
+      emptyDropZone.classList.add("drop-marker");
+    });
+
+    emptyDropZone.addEventListener("dragleave", () => {
+      emptyDropZone.classList.remove("drop-marker");
+    });
+
+    emptyDropZone.addEventListener("drop", event => {
+      if(!draggedButton) return;
+      event.preventDefault();
+      emptyDropZone.classList.remove("drop-marker");
+      moveButton(draggedButton.categoryName, draggedButton.index, currentCategory, data.categories[currentCategory].buttons.length);
+      draggedButton = null;
+    });
+
+    elements.buttonGrid.appendChild(emptyDropZone);
+  }
+
+  for(const {button,index} of visibleButtonList){
     const tile=document.createElement("article");
     tile.className="tile"; tile.draggable=true; tile.dataset.index=String(index);
     const handle=document.createElement("div"); handle.className="drag-handle"; handle.textContent="☰ Drag";
@@ -107,7 +163,7 @@ function renderButtons(){
     const del=document.createElement("button"); del.textContent="Delete"; del.addEventListener("click",()=>deleteButton(currentCategory,index));
     controls.append(edit,dup,del); tile.append(handle,copy,controls);
     tile.addEventListener("dragstart",e=>{ draggedButton={categoryName:currentCategory,index}; draggedCategory=null; tile.classList.add("dragging"); e.dataTransfer.effectAllowed="move"; });
-    tile.addEventListener("dragend",()=>{ tile.classList.remove("dragging"); draggedButton=null; clearDropMarkers(); });
+    tile.addEventListener("dragend",()=>{ tile.classList.remove("dragging"); draggedButton=null; clearTimeout(tabHoverTimer); clearDropMarkers(); });
     tile.addEventListener("dragover",e=>{ if(!draggedButton) return; e.preventDefault(); clearDropMarkers(); tile.classList.add("drop-marker"); });
     tile.addEventListener("dragleave",()=>tile.classList.remove("drop-marker"));
     tile.addEventListener("drop",e=>{ e.preventDefault(); clearDropMarkers(); if(draggedButton){ moveButton(draggedButton.categoryName, draggedButton.index, currentCategory, getButtonInsertIndex(e.clientX,e.clientY)); draggedButton=null; }});
